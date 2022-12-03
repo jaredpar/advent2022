@@ -9,14 +9,14 @@ import (
 
 //go:embed *.txt
 var f embed.FS
+var debug bool
 
-func getSumOfMax(count int) {
+func getSumOfMax(count int) int {
 	maxes := make([]int, count)
 	current := 0
 	lines := util.MustReadLines(f, "input1.txt")
 	for _, line := range lines {
 		if util.IsWhitespace(line) {
-			fmt.Printf("Current calories %d\n", current)
 			for i, max := range maxes {
 				if current > max {
 					maxes[i] = current
@@ -34,19 +34,20 @@ func getSumOfMax(count int) {
 
 	total := 0
 	for _, max := range maxes {
-		fmt.Printf("Individual max is %d\n", max)
 		total += max
 	}
 
-	fmt.Printf("Max calories is %d\n", total)
+	return total
 }
 
 func part1() {
-	getSumOfMax(1)
+	value := getSumOfMax(1)
+	fmt.Printf("Max calories %d\n", value)
 }
 
 func part2() {
-	getSumOfMax(3)
+	value := getSumOfMax(3)
+	fmt.Printf("Max calories %d\n", value)
 }
 
 func main() {
