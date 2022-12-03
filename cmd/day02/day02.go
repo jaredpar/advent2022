@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 	"errors"
+	"flag"
 	"fmt"
 	"strings"
 
@@ -17,6 +18,32 @@ const (
 	scissors move = 3
 )
 
+func (m move) getWinsAgainst() move {
+	switch m {
+	case rock:
+		return scissors
+	case paper:
+		return rock
+	case scissors:
+		return paper
+	default:
+		panic("not a valid move")
+	}
+}
+
+func (m move) getLosesAgainst() move {
+	switch m {
+	case rock:
+		return paper
+	case paper:
+		return scissors
+	case scissors:
+		return rock
+	default:
+		panic("not a valid move")
+	}
+}
+
 type round struct {
 	opponent move
 	your     move
@@ -27,20 +54,11 @@ func (r round) isTie() bool {
 }
 
 func (r round) isWin() bool {
-	switch r.your {
-	case rock:
-		return r.opponent == scissors
-	case paper:
-		return r.opponent == rock
-	case scissors:
-		return r.opponent == paper
-	default:
-		panic("invalid move")
-	}
+	return r.your.getWinsAgainst() == r.opponent
 }
 
 func (r round) isLoss() bool {
-	return !r.isWin() && !r.isTie()
+	return r.your.getLosesAgainst() == r.opponent
 }
 
 // Get the score of the round based on the formula in the problem
@@ -52,6 +70,23 @@ func (r round) getScore() int {
 		return 6 + shape
 	} else {
 		return shape
+	}
+}
+
+// Decode according to the pattern
+// X == rock == lose
+// Y == paper == tie
+// Z == scissor == win
+func (r *round) decode() {
+	switch r.your {
+	case rock:
+		r.your = r.opponent.getWinsAgainst()
+	case paper:
+		r.your = r.opponent
+	case scissors:
+		r.your = r.opponent.getLosesAgainst()
+	default:
+		panic("not a move")
 	}
 }
 
@@ -101,6 +136,12 @@ func parseInput(f embed.FS, name string) ([]round, error) {
 	return rounds, nil
 }
 
+func decode(rounds []round) {
+	for i := range rounds {
+		rounds[i].decode()
+	}
+}
+
 func getTotalScore(rounds []round) int {
 	total := 0
 	for _, round := range rounds {
@@ -122,6 +163,20 @@ func part1() {
 	fmt.Printf("Total: %d\n", getTotalScore(rounds))
 }
 
+func part2() {
+	rounds, err := parseInput(f, "input.txt")
+	if err != nil {
+		panic("could not parse input")
+	}
+	decode(rounds)
+	fmt.Printf("Total: %d\n", getTotalScore(rounds))
+}
+
 func main() {
-	part1()
+	p1 := flag.Bool("part1", false, "run part 1")
+	if *p1 {
+		part1()
+	} else {
+		part2()
+	}
 }
