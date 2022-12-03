@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"embed"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
@@ -162,6 +163,15 @@ func DigitToRune(d int) rune {
 	return rune('0' + d)
 }
 
+func StringToInt(s string) int {
+	value, err := strconv.Atoi(s)
+	if err != nil {
+		panic(fmt.Sprintf("%s is not a number", s))
+	}
+
+	return value
+}
+
 func Min(x int, y int) int {
 	if x < y {
 		return x
@@ -182,6 +192,16 @@ func Abs(x int) int {
 	}
 
 	return x
+}
+
+func IsWhitespace(s string) bool {
+	for _, r := range s {
+		if !unicode.IsSpace(r) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func Require(cond bool) {
