@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 	"errors"
+	"flag"
 	"fmt"
 	"unicode"
 
@@ -81,6 +82,54 @@ func sumShared(sacks []*sack) int {
 	return sum
 }
 
+func sumBadges(sacks []*sack) int {
+	getMap := func(s *sack) map[rune]bool {
+		m := make(map[rune]bool)
+		for _, r := range s.first {
+			m[r] = true
+		}
+		for _, r := range s.second {
+			m[r] = true
+		}
+
+		return m
+	}
+
+	getBadge := func(sacks []*sack) rune {
+		m1 := getMap(sacks[0])
+		m2 := getMap(sacks[1])
+		inBoth := func(r rune) bool {
+			_, p1 := m1[r]
+			_, p2 := m2[r]
+			return p1 && p2
+		}
+
+		sack := sacks[2]
+		for _, r := range sack.first {
+			if inBoth(r) {
+				return r
+			}
+		}
+		for _, r := range sack.second {
+			if inBoth(r) {
+				return r
+			}
+		}
+
+		panic("no badge")
+	}
+
+	index := 0
+	sum := 0
+	for index < len(sacks) {
+		r := getBadge(sacks[index : index+3])
+		sum += priority(r)
+		index += 3
+	}
+
+	return sum
+}
+
 func part1() {
 	sacks, err := parseSacks(f, "input.txt")
 	if err != nil {
@@ -91,6 +140,21 @@ func part1() {
 	fmt.Printf("Sum is %d\n", sum)
 }
 
+func part2() {
+	sacks, err := parseSacks(f, "input.txt")
+	if err != nil {
+		panic("bad example")
+	}
+
+	sum := sumBadges(sacks)
+	fmt.Printf("Sum is %d\n", sum)
+}
+
 func main() {
-	part1()
+	p1 := flag.Bool("part1", false, "run part 1")
+	if *p1 {
+		part1()
+	} else {
+		part2()
+	}
 }

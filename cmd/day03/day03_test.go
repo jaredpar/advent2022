@@ -25,3 +25,16 @@ func TestPart1(t *testing.T) {
 	core("example.txt", 157)
 	core("input.txt", 7903)
 }
+
+func TestPart2(t *testing.T) {
+	assert := testUtil.NewAssert(t)
+	core := func(name string, value int) {
+		sacks, err := parseSacks(f, name)
+		assert.NotError(err)
+		sum := sumBadges(sacks)
+		assert.EqualInt(value, sum)
+	}
+
+	core("example.txt", 70)
+	core("input.txt", 2548)
+}
