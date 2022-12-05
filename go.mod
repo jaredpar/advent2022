@@ -1,3 +1,3 @@
 module github.com/jaredpar/advent2022
 
-go 1.17
+go 1.19
