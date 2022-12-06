@@ -29,19 +29,32 @@ type ship struct {
 	stacks []util.Stack[rune]
 }
 
-func (s *ship) runMove(m move) {
-	c := 0
+func (s *ship) runMove(m move, keepOrder bool) {
 	fs := &s.stacks[m.from-1]
 	ts := &s.stacks[m.to-1]
-	for c < m.count {
-		ts.Push(fs.Pop())
-		c++
+	if keepOrder {
+		temp := util.NewStack[rune]()
+		c := 0
+		for c < m.count {
+			temp.Push(fs.Pop())
+			c++
+		}
+
+		for temp.Length() > 0 {
+			ts.Push(temp.Pop())
+		}
+	} else {
+		c := 0
+		for c < m.count {
+			ts.Push(fs.Pop())
+			c++
+		}
 	}
 }
 
-func (s *ship) runMoves(moves []move) {
+func (s *ship) runMoves(moves []move, keepOrder bool) {
 	for _, m := range moves {
-		s.runMove(m)
+		s.runMove(m, keepOrder)
 	}
 }
 
@@ -145,6 +158,6 @@ func main() {
 		panic(err)
 	}
 
-	ship.runMoves(moves)
+	ship.runMoves(moves /* keepOrder */, true)
 	fmt.Println(ship.message())
 }
