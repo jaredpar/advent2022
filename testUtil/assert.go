@@ -13,21 +13,15 @@ func NewAssert(t *testing.T) Assert {
 }
 
 func (a Assert) EqualByte(expected, actual byte) {
-	if expected != actual {
-		a.t.Errorf("expected %d but got %d", expected, actual)
-	}
+	AssertEqual(a.t, expected, actual)
 }
 
 func (a Assert) EqualInt(expected, actual int) {
-	if expected != actual {
-		a.t.Errorf("expected %d but got %d", expected, actual)
-	}
+	AssertEqual(a.t, expected, actual)
 }
 
 func (a Assert) EqualString(expected, actual string) {
-	if expected != actual {
-		a.t.Errorf("expected %s but got %s", expected, actual)
-	}
+	AssertEqual(a.t, expected, actual)
 }
 
 func (a Assert) True(cond bool) {
@@ -38,6 +32,6 @@ func (a Assert) True(cond bool) {
 
 func (a Assert) NotError(err error) {
 	if err != nil {
-		a.t.Error(err)
+		a.t.Fatal(err)
 	}
 }
