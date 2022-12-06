@@ -31,3 +31,12 @@ func TestStackCapacity(t *testing.T) {
 		next--
 	}
 }
+
+func TestEmpty(t *testing.T) {
+	assert := testUtil.NewAssert(t)
+	var s Stack[int]
+	s.Reverse()
+	s.Push(13)
+	assert.EqualInt(1, s.Length())
+	assert.EqualInt(13, s.Pop())
+}

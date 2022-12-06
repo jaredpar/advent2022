@@ -194,6 +194,18 @@ func Abs(x int) int {
 	return x
 }
 
+func Require(cond bool) {
+	if !cond {
+		panic("failed assert")
+	}
+}
+
+func ReverseSlice[T any](slice []T) {
+	for i, j := 0, len(slice)-1; i < j; i, j = i+1, j-1 {
+		slice[i], slice[j] = slice[j], slice[i]
+	}
+}
+
 func IsWhitespace(s string) bool {
 	for _, r := range s {
 		if !unicode.IsSpace(r) {
@@ -202,10 +214,4 @@ func IsWhitespace(s string) bool {
 	}
 
 	return true
-}
-
-func Require(cond bool) {
-	if !cond {
-		panic("failed assert")
-	}
 }
