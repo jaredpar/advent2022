@@ -2,7 +2,9 @@ package main
 
 import (
 	"embed"
+	"flag"
 	"fmt"
+	"sort"
 
 	"github.com/jaredpar/advent2022/util"
 )
@@ -10,8 +12,10 @@ import (
 //go:embed *.txt
 var f embed.FS
 
-func getStartOffset(line string) int {
-	buffer := make([]rune, 3)
+func getOffsetCore(line string, length int) int {
+	length--
+	sortBuffer := make([]rune, length)
+	buffer := make([]rune, length)
 	bufferIndex := 0
 	inBuffer := func(r rune) bool {
 		for _, e := range buffer {
@@ -23,14 +27,15 @@ func getStartOffset(line string) int {
 		return false
 	}
 
-	// bubble sort! three elements right now so this is not
-	// a big deal but can become so if the number grows
 	bufferHasDupes := func() bool {
-		for i := 0; i < len(buffer); i++ {
-			for j := 0; j < len(buffer); j++ {
-				if i != j && buffer[i] == buffer[j] {
-					return true
-				}
+		copy(sortBuffer, buffer)
+		sort.Slice(sortBuffer, func(i, j int) bool {
+			return sortBuffer[i] < sortBuffer[j]
+		})
+
+		for i := 0; i+1 < length; i++ {
+			if sortBuffer[i] == sortBuffer[i+1] {
+				return true
 			}
 		}
 
@@ -38,9 +43,10 @@ func getStartOffset(line string) int {
 	}
 
 	for i, r := range line {
-		if i >= 3 && !inBuffer(r) && !bufferHasDupes() {
+		if i >= length && !inBuffer(r) && !bufferHasDupes() {
 			return i + 1
 		}
+
 		buffer[bufferIndex] = r
 		bufferIndex++
 		if bufferIndex == len(buffer) {
@@ -51,13 +57,31 @@ func getStartOffset(line string) int {
 	panic("did not find start")
 }
 
+func getPacketOffset(line string) int {
+	return getOffsetCore(line, 4)
+}
+
+func getMessageOffset(line string) int {
+	return getOffsetCore(line, 14)
+}
+
 func part1() {
 	lines := util.MustReadLines(f, "input.txt")
-	start := getStartOffset(lines[0])
+	start := getPacketOffset(lines[0])
+	fmt.Printf("Start is %d\n", start)
+}
+
+func part2() {
+	lines := util.MustReadLines(f, "input.txt")
+	start := getMessageOffset(lines[0])
 	fmt.Printf("Start is %d\n", start)
 }
 
 func main() {
-	part1()
-
+	p1 := flag.Bool("part1", false, "run part 1")
+	if *p1 {
+		part1()
+	} else {
+		part2()
+	}
 }

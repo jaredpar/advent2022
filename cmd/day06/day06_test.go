@@ -9,9 +9,9 @@ import (
 
 func TestPart1Sample(t *testing.T) {
 	assert := testUtil.NewAssert(t)
-	assert.EqualInt(5, getStartOffset("bvwbjplbgvbhsrlpgdmjqwftvncz"))
-	assert.EqualInt(6, getStartOffset("nppdvjthqldpwncqszvftbrmjlhg"))
-	assert.EqualInt(11, getStartOffset("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"))
+	assert.EqualInt(5, getPacketOffset("bvwbjplbgvbhsrlpgdmjqwftvncz"))
+	assert.EqualInt(6, getPacketOffset("nppdvjthqldpwncqszvftbrmjlhg"))
+	assert.EqualInt(11, getPacketOffset("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"))
 }
 
 func TestPart1(t *testing.T) {
@@ -19,5 +19,12 @@ func TestPart1(t *testing.T) {
 	lines, err := util.ReadLines(f, "input.txt")
 	assert.NotError(err)
 	assert.EqualInt(1, len(lines))
-	assert.EqualInt(1779, getStartOffset(lines[0]))
+	assert.EqualInt(1779, getPacketOffset(lines[0]))
+}
+
+func TestPart2Sample(t *testing.T) {
+	assert := testUtil.NewAssert(t)
+	assert.EqualInt(23, getMessageOffset("bvwbjplbgvbhsrlpgdmjqwftvncz"))
+	assert.EqualInt(23, getMessageOffset("nppdvjthqldpwncqszvftbrmjlhg"))
+	assert.EqualInt(26, getMessageOffset("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"))
 }
