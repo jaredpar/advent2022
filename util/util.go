@@ -5,9 +5,13 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
+	"unicode/utf8"
+
+	"golang.org/x/exp/constraints"
 )
 
 func ParseLines(text string) []string {
@@ -214,4 +218,45 @@ func IsWhitespace(s string) bool {
 	}
 
 	return true
+}
+
+func StartsWith(s string, r rune) bool {
+	found, _ := utf8.DecodeRuneInString(s)
+	return found == r
+}
+
+func InsertAt[T any](data []T, index int, value T) []T {
+	length := len(data)
+	if length == index {
+		return append(data, value)
+	}
+
+	var dummy T
+	data = append(data, dummy)
+
+	for i := length; i > index; i-- {
+		data[i] = data[i-1]
+	}
+
+	data[index] = value
+	return data
+}
+
+func InsertSortedF[T any](data []T, value T, less func(left, right T) bool) []T {
+	length := len(data)
+	if length == 0 {
+		return append(data, value)
+	}
+
+	index := sort.Search(length, func(i int) bool {
+		return less(value, data[i])
+	})
+
+	return InsertAt(data, index, value)
+}
+
+func InsertSorted[S ~[]E, E constraints.Ordered](data S, value E) S {
+	return InsertSortedF(data, value, func(left, right E) bool {
+		return left < right
+	})
 }
