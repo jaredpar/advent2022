@@ -157,7 +157,7 @@ func FirstRune(text string) rune {
 	panic("zero length string")
 }
 
-func SetAllInt(values []int, value int) {
+func SetAll[T any](values []T, value T) {
 	for i := 0; i < len(values); i++ {
 		values[i] = value
 	}
