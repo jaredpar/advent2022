@@ -56,6 +56,116 @@ func (p *point) move(d direction) {
 	}
 }
 
+type rope struct {
+	points []point
+}
+
+func newRope(knots int) *rope {
+	if knots < 2 {
+		panic("must be at least 2 knots")
+	}
+
+	p := make([]point, knots)
+	return &rope{points: p}
+}
+
+func (r *rope) move(direction direction) {
+	moveNext := func(head, tail *point) {
+		if *head == *tail {
+			return
+		}
+
+		rowDiff := head.row - tail.row
+		columnDiff := head.column - tail.column
+
+		if rowDiff < -1 || rowDiff > 1 {
+			if rowDiff < -1 {
+				tail.move(up)
+			} else if rowDiff > 1 {
+				tail.move(down)
+			}
+
+			if columnDiff < 0 {
+				tail.move(left)
+			} else if columnDiff > 0 {
+				tail.move(right)
+			}
+		}
+
+		if columnDiff < -1 || columnDiff > 1 {
+			if columnDiff < -1 {
+				tail.move(left)
+			} else if columnDiff > 1 {
+				tail.move(right)
+			}
+
+			if rowDiff < 0 {
+				tail.move(up)
+			} else if rowDiff > 0 {
+				tail.move(down)
+			}
+		}
+	}
+
+	r.points[0].move(direction)
+	for i := 1; i < len(r.points); i++ {
+		moveNext(&r.points[i-1], &r.points[i])
+	}
+}
+
+func (r *rope) head() *point {
+	return &r.points[0]
+}
+
+func (r *rope) tail() *point {
+	return &r.points[len(r.points)-1]
+}
+
+func (r *rope) String() string {
+	var sb strings.Builder
+	top := r.points[0].row
+	bottom := top
+	left := r.points[0].column
+	right := left
+
+	for i := 1; i < len(r.points); i++ {
+		current := r.points[i]
+		top = util.Min(top, current.row)
+		bottom = util.Max(bottom, current.row)
+		left = util.Min(left, current.column)
+		right = util.Max(right, current.column)
+	}
+
+	for row := top; row <= bottom; row++ {
+		for column := left; column <= right; column++ {
+			position := newPoint(row, column)
+			switch position {
+			case *r.head():
+				sb.WriteRune('H')
+			case *r.tail():
+				sb.WriteRune('T')
+			default:
+				any := false
+				for i := 1; i+1 < len(r.points); i++ {
+					if r.points[i] == position {
+						sb.WriteRune('.')
+						any = true
+						break
+					}
+				}
+
+				if !any {
+					sb.WriteRune('.')
+				}
+			}
+		}
+
+		sb.WriteRune('\n')
+	}
+
+	return sb.String()
+}
+
 func parseMoves(lines []string) ([]move, error) {
 	moves := make([]move, len(lines))
 	for i, line := range lines {
@@ -100,78 +210,14 @@ func part1core(name string) (int, error) {
 		return 0, err
 	}
 
-	head := newPoint(0, 0)
-	tail := newPoint(0, 0)
-	moveTail := func() {
-		if head == tail {
-			return
-		}
-
-		rowDiff := head.row - tail.row
-		columnDiff := head.column - tail.column
-
-		if rowDiff < -1 || rowDiff > 1 {
-			if rowDiff < -1 {
-				tail.move(up)
-			} else if rowDiff > 1 {
-				tail.move(down)
-			}
-
-			if columnDiff < 0 {
-				tail.move(left)
-			} else if columnDiff > 0 {
-				tail.move(right)
-			}
-		}
-
-		if columnDiff < -1 || columnDiff > 1 {
-			if columnDiff < -1 {
-				tail.move(left)
-			} else if columnDiff > 1 {
-				tail.move(right)
-			}
-
-			if rowDiff < 0 {
-				tail.move(up)
-			} else if rowDiff > 0 {
-				tail.move(down)
-			}
-		}
-	}
-
-	printIt := func() {
-		top := util.Min(head.row, tail.row)
-		bottom := util.Max(head.row, tail.row)
-		right := util.Max(head.column, tail.column)
-		left := util.Min(head.column, tail.column)
-
-		for r := top; r <= bottom; r++ {
-			for c := left; c <= right; c++ {
-				current := newPoint(r, c)
-				switch current {
-				case head:
-					fmt.Print("H")
-				case tail:
-					fmt.Print("T")
-				default:
-					fmt.Print(".")
-				}
-			}
-			fmt.Println()
-		}
-
-		fmt.Println()
-	}
-
+	rope := newRope(2)
 	hit := make(map[point]bool)
 	for _, move := range moves {
 		for i := 0; i < move.count; i++ {
-			head.move(move.direction)
-			moveTail()
-			hit[tail] = true
-
+			rope.move(move.direction)
+			hit[*rope.tail()] = true
 			if debug {
-				printIt()
+				fmt.Println(rope)
 			}
 		}
 	}
@@ -183,7 +229,7 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "visual debug")
 	flag.Parse()
 
-	count, err := part1core("input.txt")
+	count, err := part1core("example.txt")
 	if err != nil {
 		panic(err)
 	}

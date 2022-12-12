@@ -176,18 +176,44 @@ func StringToInt(s string) int {
 	return value
 }
 
-func Min(x int, y int) int {
+func Min[T constraints.Ordered](x T, y T) T {
 	if x < y {
 		return x
 	}
 	return y
 }
 
-func Max(x int, y int) int {
+func MinSlice[T constraints.Ordered](data []T) T {
+	if len(data) == 0 {
+		panic("must be at least one element")
+	}
+
+	min := data[0]
+	for i := 1; i < len(data); i++ {
+		min = Min(min, data[i])
+	}
+
+	return min
+}
+
+func Max[T constraints.Ordered](x T, y T) T {
 	if x > y {
 		return x
 	}
 	return y
+}
+
+func MaxSlice[T constraints.Ordered](data []T) T {
+	if len(data) == 0 {
+		panic("must be at least one element")
+	}
+
+	max := data[0]
+	for i := 1; i < len(data); i++ {
+		max = Max(max, data[i])
+	}
+
+	return max
 }
 
 func Abs(x int) int {
