@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 	"errors"
+	"flag"
 	"fmt"
 	"strconv"
 	"strings"
@@ -68,7 +69,7 @@ func parseInstructions(name string) ([]instruction, error) {
 	})
 }
 
-func getSum(instructions []instruction) int {
+func run(instructions []instruction, callback func(int, int)) int {
 	var currentIndex, remaining int
 	var current *instruction
 	changeCurrent := func(index int) {
@@ -79,14 +80,11 @@ func getSum(instructions []instruction) int {
 	changeCurrent(0)
 
 	register := 1
-	nextCycleCheck := 20
 	sum := 0
+	cycle := 1
 
-	for cycle := 1; cycle <= 220; cycle++ {
-		if cycle == nextCycleCheck {
-			sum += register * cycle
-			nextCycleCheck += 40
-		}
+	for {
+		callback(cycle, register)
 
 		remaining--
 		if remaining == 0 {
@@ -94,11 +92,47 @@ func getSum(instructions []instruction) int {
 				register += instructions[currentIndex].count
 			}
 
+			if currentIndex+1 == len(instructions) {
+				break
+			}
+
 			changeCurrent(currentIndex + 1)
 		}
+		cycle++
 	}
 
 	return sum
+}
+
+func getSum(instructions []instruction) int {
+	nextCycleCheck := 20
+	sum := 0
+
+	run(instructions, func(cycle, register int) {
+		if cycle == nextCycleCheck {
+			sum += register * cycle
+			nextCycleCheck += 40
+		}
+	})
+
+	return sum
+}
+
+func draw(instructions []instruction) string {
+	var sb strings.Builder
+	run(instructions, func(cycle, register int) {
+		column := (cycle % 40) - 1
+		if (register-1) <= column && (register+1) >= column {
+			sb.WriteRune('#')
+		} else {
+			sb.WriteRune('.')
+		}
+
+		if cycle%40 == 0 {
+			sb.WriteRune('\n')
+		}
+	})
+	return sb.String()
 }
 
 func part1Core(name string) (int, error) {
@@ -110,11 +144,30 @@ func part1Core(name string) (int, error) {
 	return getSum(instructions), nil
 }
 
-func main() {
-	sum, err := part1Core("input.txt")
+func part2Core(name string) (string, error) {
+	instructions, err := parseInstructions(name)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	fmt.Printf("%d\n", sum)
+	return draw(instructions), nil
+}
+
+func main() {
+	p1 := flag.Bool("part1", false, "run part 1")
+	if *p1 {
+		sum, err := part1Core("input.txt")
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("%d\n", sum)
+	} else {
+		screen, err := part2Core("input.txt")
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println(screen)
+	}
 }
