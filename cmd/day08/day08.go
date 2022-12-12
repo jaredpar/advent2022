@@ -11,77 +11,87 @@ import (
 //go:embed *.txt
 var f embed.FS
 
+type direction int
+
+const (
+	up    direction = 0
+	down  direction = 1
+	right direction = 2
+	left  direction = 3
+)
+
+// Walk the graph in the specific direction. The `handle` parameter will be fed
+// the current values until it returns false or the end of the graph is reached in
+// that direction.
+func walk(g *util.Grid[int], row, column int, direction direction, handle func(int) bool) {
+	var step func(int, int) (int, int)
+	switch direction {
+	case up:
+		step = func(r, c int) (int, int) {
+			return r - 1, c
+		}
+	case down:
+		step = func(r, c int) (int, int) {
+			return r + 1, c
+		}
+	case left:
+		step = func(r, c int) (int, int) {
+			return r, c - 1
+		}
+	case right:
+		step = func(r, c int) (int, int) {
+			return r, c + 1
+		}
+	default:
+		panic("invalid direction")
+	}
+
+	r, c := step(row, column)
+	for {
+		if r < 0 || c < 0 || r >= g.Rows() || c >= g.Columns() {
+			break
+		}
+
+		value := g.Value(r, c)
+		if !handle(value) {
+			break
+		}
+
+		r, c = step(r, c)
+	}
+}
+
 func isVisible(g *util.Grid[int], row, column int) bool {
-	if row == 0 || column == 0 {
-		return true
-	}
-
-	if row+1 == g.Rows() || column+1 == g.Columns() {
-		return true
-	}
-
 	height := g.Value(row, column)
-	core := func(step func(int, int) (int, int)) bool {
-		r, c := step(row, column)
-		for {
-			if r < 0 || c < 0 || r >= g.Rows() || c >= g.Columns() {
-				return true
-			}
-
-			if g.Value(r, c) >= height {
+	core := func(direction direction) bool {
+		visible := true
+		walk(g, row, column, direction, func(value int) bool {
+			if value >= height {
+				visible = false
 				return false
 			}
 
-			r, c = step(r, c)
-		}
+			return true
+		})
+
+		return visible
 	}
 
-	stepLeft := func(r, c int) (int, int) {
-		return r, c - 1
-	}
-	stepRight := func(r, c int) (int, int) {
-		return r, c + 1
-	}
-	stepUp := func(r, c int) (int, int) {
-		return r - 1, c
-	}
-	stepDown := func(r, c int) (int, int) {
-		return r + 1, c
-	}
-	return core(stepLeft) || core(stepRight) || core(stepUp) || core(stepDown)
+	return core(up) || core(down) || core(left) || core(right)
 }
 
 func scenicScore(g *util.Grid[int], row, column int) int {
 	height := g.Value(row, column)
-	core := func(step func(int, int) (int, int)) int {
+	core := func(direction direction) int {
 		count := 0
-		r, c := step(row, column)
-		for {
-			if r < 0 || c < 0 || r >= g.Rows() || c >= g.Columns() {
-				return count
-			}
-
+		walk(g, row, column, direction, func(value int) bool {
 			count++
-			if g.Value(r, c) >= height {
-				return count
-			}
-			r, c = step(r, c)
-		}
+			return value < height
+		})
+		return count
 	}
 
-	stepLeft := func(r, c int) (int, int) {
-		return r, c - 1
-	}
-	stepRight := func(r, c int) (int, int) {
-		return r, c + 1
-	}
-	stepUp := func(r, c int) (int, int) {
-		return r - 1, c
-	}
-	stepDown := func(r, c int) (int, int) {
-		return r + 1, c
-	}
-	return core(stepLeft) * core(stepRight) * core(stepUp) * core(stepDown)
+	return core(up) * core(down) * core(left) * core(right)
 }
 
 func countVisible(g *util.Grid[int]) int {
@@ -146,7 +156,7 @@ func part2Core(name string) (int, error) {
 }
 
 func part2() {
-	max, err := part2Core("example.txt")
+	max, err := part2Core("input.txt")
 	if err != nil {
 		panic(err)
 	}

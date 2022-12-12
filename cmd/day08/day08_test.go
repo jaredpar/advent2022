@@ -29,5 +29,5 @@ func TestPart2(t *testing.T) {
 	}
 
 	core("example.txt", 8)
-	// core("input.txt", 1820)
+	core("input.txt", 385112)
 }
