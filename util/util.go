@@ -14,17 +14,6 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-func ParseLines(text string) []string {
-	reader := strings.NewReader(text)
-	scanner := bufio.NewScanner(reader)
-	lines := make([]string, 0)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	return lines
-}
-
 func ReadLines(f embed.FS, name string) ([]string, error) {
 	file, err := f.Open(name)
 	if err != nil {
@@ -42,6 +31,28 @@ func ReadLines(f embed.FS, name string) ([]string, error) {
 	return lines, nil
 }
 
+func ParseLines[T any](lines []string, parse func(string) (T, error)) ([]T, error) {
+	data := make([]T, len(lines))
+	var err error
+	for i, line := range lines {
+		data[i], err = parse(line)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return data, nil
+}
+
+func ReadAndParseLines[T any](f embed.FS, name string, parse func(string) (T, error)) ([]T, error) {
+	lines, err := ReadLines(f, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseLines(lines, parse)
+}
+
 func MustReadLines(f embed.FS, name string) []string {
 	lines, err := ReadLines(f, name)
 	if err != nil {
@@ -52,22 +63,9 @@ func MustReadLines(f embed.FS, name string) []string {
 }
 
 func ReadLinesAsInt(f embed.FS, name string) ([]int, error) {
-	lines, err := ReadLines(f, name)
-	if err != nil {
-		return nil, err
-	}
-
-	values := make([]int, 0, len(lines))
-	for _, line := range lines {
-		value, err := strconv.Atoi(line)
-		if err != nil {
-			return nil, err
-		}
-
-		values = append(values, value)
-	}
-
-	return values, nil
+	return ReadAndParseLines(f, name, func(line string) (int, error) {
+		return strconv.Atoi(line)
+	})
 }
 
 func ReadAsSingleLine(f embed.FS, name string) (string, error) {
