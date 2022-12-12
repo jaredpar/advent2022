@@ -90,9 +90,7 @@ func (r *rope) move(direction direction) {
 			} else if columnDiff > 0 {
 				tail.move(right)
 			}
-		}
-
-		if columnDiff < -1 || columnDiff > 1 {
+		} else if columnDiff < -1 || columnDiff > 1 {
 			if columnDiff < -1 {
 				tail.move(left)
 			} else if columnDiff > 1 {
@@ -110,6 +108,12 @@ func (r *rope) move(direction direction) {
 	r.points[0].move(direction)
 	for i := 1; i < len(r.points); i++ {
 		moveNext(&r.points[i-1], &r.points[i])
+	}
+}
+
+func (r *rope) moveCount(d direction, count int) {
+	for i := 0; i < count; i++ {
+		r.move(d)
 	}
 }
 
@@ -148,7 +152,12 @@ func (r *rope) String() string {
 				any := false
 				for i := 1; i+1 < len(r.points); i++ {
 					if r.points[i] == position {
-						sb.WriteRune('.')
+						if i < 10 {
+							fmt.Fprintf(&sb, "%d", i)
+						} else {
+							sb.WriteRune('*')
+						}
+
 						any = true
 						break
 					}
@@ -199,7 +208,7 @@ func parseMoves(lines []string) ([]move, error) {
 	return moves, nil
 }
 
-func part1core(name string) (int, error) {
+func runCore(name string, knots int) (int, error) {
 	lines, err := util.ReadLines(f, name)
 	if err != nil {
 		return 0, err
@@ -210,7 +219,7 @@ func part1core(name string) (int, error) {
 		return 0, err
 	}
 
-	rope := newRope(2)
+	rope := newRope(knots)
 	hit := make(map[point]bool)
 	for _, move := range moves {
 		for i := 0; i < move.count; i++ {
@@ -226,10 +235,18 @@ func part1core(name string) (int, error) {
 }
 
 func main() {
+	p1 := flag.Bool("part1", false, "run part 1")
 	flag.BoolVar(&debug, "debug", false, "visual debug")
 	flag.Parse()
 
-	count, err := part1core("example.txt")
+	var knots int
+	if *p1 {
+		knots = 2
+	} else {
+		knots = 10
+	}
+
+	count, err := runCore("input.txt", knots)
 	if err != nil {
 		panic(err)
 	}
