@@ -244,9 +244,30 @@ func IsWhitespace(s string) bool {
 	return true
 }
 
-func StartsWith(s string, r rune) bool {
+func StartsWithRune(s string, r rune) bool {
 	found, _ := utf8.DecodeRuneInString(s)
 	return found == r
+}
+
+func StartsWithString(s, prefix string) bool {
+	for _, pr := range prefix {
+		if len(s) == 0 {
+			return false
+		}
+
+		sr, size := utf8.DecodeRuneInString(s)
+		if sr == utf8.RuneError {
+			panic("bad string")
+		}
+
+		if pr != sr {
+			return false
+		}
+
+		s = s[size:]
+	}
+
+	return true
 }
 
 func InsertAt[T any](data []T, index int, value T) []T {

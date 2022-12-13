@@ -189,7 +189,7 @@ func parseInput(f embed.FS, name string) (*directory, error) {
 	handleList := func() error {
 		for index < len(lines) {
 			line := lines[index]
-			if util.StartsWith(line, '$') {
+			if util.StartsWithRune(line, '$') {
 				break
 			}
 

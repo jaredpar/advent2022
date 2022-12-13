@@ -30,6 +30,12 @@ func (a Assert) True(cond bool) {
 	}
 }
 
+func (a Assert) False(cond bool) {
+	if cond {
+		a.t.Error("expected false")
+	}
+}
+
 func (a Assert) NotError(err error) {
 	if err != nil {
 		a.t.Fatal(err)

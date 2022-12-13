@@ -49,3 +49,12 @@ func TestInsertSortedFSimple(t *testing.T) {
 	assert.EqualString("c", data[2].value)
 	assert.EqualString("d", data[3].value)
 }
+
+func TestStartsWithString(t *testing.T) {
+	assert := testUtil.NewAssert(t)
+	assert.True(StartsWithString("hello world", "hello"))
+	assert.True(StartsWithString("hello world", ""))
+	assert.True(StartsWithString("hello world", "h"))
+	assert.False(StartsWithString("hello world", "dog"))
+	assert.False(StartsWithString("", "dog"))
+}

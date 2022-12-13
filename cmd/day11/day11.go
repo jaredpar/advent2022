@@ -3,7 +3,6 @@ package main
 import (
 	"embed"
 	"errors"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -16,25 +15,22 @@ var f embed.FS
 
 type monkey struct {
 	worryLevels []int
-	worryFunc   func(int) int
+	operation   func(int) int
 	testDivisor int
 	trueMonkey  int
 	falseMonkey int
 }
 
-func newMonkey(worryLevels []int, worryFunc func(int) int, testDivisor, trueMonkey, falseMonkey int) *monkey {
-	return &monkey{worryLevels: worryLevels, worryFunc: worryFunc, testDivisor: testDivisor, trueMonkey: trueMonkey, falseMonkey: falseMonkey}
+func newMonkey(worryLevels []int, operation func(int) int, testDivisor, trueMonkey, falseMonkey int) *monkey {
+	return &monkey{worryLevels: worryLevels, operation: operation, testDivisor: testDivisor, trueMonkey: trueMonkey, falseMonkey: falseMonkey}
 }
 
-func stripStart(prefix string, input string) (string, error) {
-	pattern := fmt.Sprintf("^%s(.*)", prefix)
-	r := regexp.MustCompile(pattern)
-	indexes := r.FindStringSubmatchIndex(input)
-	if len(indexes) != 4 {
-		return "", errors.New("bad line")
+func stripStart(prefix, input string) (string, error) {
+	if util.StartsWithString(input, prefix) {
+		return input[len(prefix):], nil
 	}
 
-	return input[indexes[2]:indexes[3]], nil
+	return "", errors.New("bad line")
 }
 
 func parseMonkies(lines []string) ([]*monkey, error) {
@@ -71,6 +67,60 @@ func parseMonkies(lines []string) ([]*monkey, error) {
 		return items, nil
 	}
 
+	parseOperation := func(line string) (operation func(int) int, err error) {
+		doubleFunc := func(old int) int {
+			return old * old
+		}
+
+		getPlusFunc := func(increment int) func(int) int {
+			return func(old int) int {
+				return old + increment
+			}
+		}
+
+		getMultiplyFunc := func(increment int) func(int) int {
+			return func(old int) int {
+				return old * increment
+			}
+		}
+
+		line, err = stripStart("  Operation: new = old ", line)
+		if err != nil {
+			return
+		}
+
+		parts := strings.Split(line, " ")
+		if len(parts) != 2 {
+			err = errors.New("bad line")
+			return
+		}
+
+		var number int
+		switch parts[0] {
+		case "+":
+			number, err = strconv.Atoi(parts[1])
+			if err != nil {
+				return
+			}
+
+			operation = getPlusFunc(number)
+		case "*":
+			if parts[1] == "old" {
+				operation = doubleFunc
+			} else {
+				number, err = strconv.Atoi(parts[1])
+				if err != nil {
+					return
+				}
+				operation = getMultiplyFunc(number)
+			}
+		default:
+			err = errors.New("bad operation")
+		}
+
+		return
+	}
+
 	monkies := make([]*monkey, 0, len(lines)+1/7)
 	index := 0
 	for index+5 < len(lines) {
@@ -88,8 +138,10 @@ func parseMonkies(lines []string) ([]*monkey, error) {
 			return nil, err
 		}
 
-		var worryFunc func(int) int
-		// TODO: parse this
+		operation, err := parseOperation(lines[index+2])
+		if err != nil {
+			return nil, err
+		}
 
 		testDivisor, err := parseNumber(`Test: divisible by (\d+)`, lines[index+3])
 		if err != nil {
@@ -106,7 +158,7 @@ func parseMonkies(lines []string) ([]*monkey, error) {
 			return nil, err
 		}
 
-		monkey := newMonkey(worryLevels, worryFunc, testDivisor, trueMonkey, falseMonkey)
+		monkey := newMonkey(worryLevels, operation, testDivisor, trueMonkey, falseMonkey)
 		monkies = append(monkies, monkey)
 
 		index += 7
