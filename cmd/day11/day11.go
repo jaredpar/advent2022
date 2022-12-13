@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"flag"
 	"fmt"
 	"regexp"
 	"sort"
@@ -26,36 +27,49 @@ func newMonkey(items []int, operation func(int) int, testDivisor, trueMonkey, fa
 	return &monkey{items: items, operation: operation, testDivisor: testDivisor, trueMonkey: trueMonkey, falseMonkey: falseMonkey}
 }
 
-type troop []*monkey
+type troop struct {
+	monkeys []*monkey
+	worried bool
+}
 
-func (t troop) turn(id int) {
-	current := t[id]
+func newTroop(monkeys []*monkey, worried bool) *troop {
+	return &troop{monkeys: monkeys, worried: worried}
+}
+
+func (t *troop) turn(id int) {
+	current := t.monkeys[id]
 	items := current.items
 	current.items = make([]int, 0)
 	for _, worry := range items {
 		current.inspected++
-		worry = current.operation(worry) / 3
+
+		worry = current.operation(worry)
+
+		// If not panicking reduce the stress level
+		if !t.worried {
+			worry = worry / 3
+		}
 
 		var target *monkey
 		if worry%current.testDivisor == 0 {
-			target = t[current.trueMonkey]
+			target = t.monkeys[current.trueMonkey]
 		} else {
-			target = t[current.falseMonkey]
+			target = t.monkeys[current.falseMonkey]
 		}
 
 		target.items = append(target.items, worry)
 	}
 }
 
-func (t troop) round() {
-	for i, _ := range t {
+func (t *troop) round() {
+	for i, _ := range t.monkeys {
 		t.turn(i)
 	}
 }
 
-func (t troop) String() string {
+func (t *troop) String() string {
 	var sb strings.Builder
-	for i, m := range t {
+	for i, m := range t.monkeys {
 		fmt.Fprintf(&sb, "Monkey %d: ", i)
 		first := true
 		for _, level := range m.items {
@@ -66,6 +80,14 @@ func (t troop) String() string {
 			first = false
 		}
 		sb.WriteRune('\n')
+	}
+	return sb.String()
+}
+
+func (t *troop) InspectedString() string {
+	var sb strings.Builder
+	for i, m := range t.monkeys {
+		fmt.Fprintf(&sb, "Monkey %d inspected items %d times\n", i, m.inspected)
 	}
 	return sb.String()
 }
@@ -175,19 +197,23 @@ func readAndParseMonkeys(name string) []*monkey {
 	return parseMonkeys(lines)
 }
 
-func readAndParseTroop(name string) troop {
-	return readAndParseMonkeys(name)
+func readAndParseTroop(name string, worried bool) *troop {
+	monkeys := readAndParseMonkeys(name)
+	return newTroop(monkeys, worried)
 }
 
-func part1(name string) int {
-	troop := readAndParseTroop(name)
+func core(name string, worried bool, rounds int) int {
+	troop := readAndParseTroop(name, worried)
 
-	for r := 0; r < 20; r++ {
+	for r := 1; r <= rounds; r++ {
 		troop.round()
-		fmt.Println(troop)
+
+		if r == 1 || r == 20 || r%1000 == 0 {
+			fmt.Println(troop.InspectedString())
+		}
 	}
 
-	counts := util.Project(troop, func(m *monkey) int {
+	counts := util.Project(troop.monkeys, func(m *monkey) int {
 		return m.inspected
 	})
 	sort.Ints(counts)
@@ -195,7 +221,22 @@ func part1(name string) int {
 	return counts[0] * counts[1]
 }
 
+func part1(name string) int {
+	return core(name /* worried */, false /* rounds */, 20)
+}
+
+func part2(name string) int {
+	return core(name /* worried */, true /* rounds */, 10000)
+}
+
 func main() {
-	count := part1("input.txt")
+	p1 := flag.Bool("part1", false, "run part 1")
+	var count int
+	if *p1 {
+		count = part1("input.txt")
+	} else {
+		count = part2("example.txt")
+	}
+
 	fmt.Println(count)
 }
