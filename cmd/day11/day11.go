@@ -48,7 +48,15 @@ func (t *troop) turn(id int) {
 	for _, worry := range items {
 		current.inspected++
 
+		if (id == 0 || id == 2) && t.worried && worry%current.testDivisor == 0 {
+			worry = worry / current.testDivisor
+		}
+
 		worry = current.operation(worry)
+
+		if (id == 0 || id == 2) && t.worried && worry%current.testDivisor == 0 {
+			worry = worry / current.testDivisor
+		}
 
 		// If not panicking reduce the stress level
 		if !t.worried {
@@ -56,13 +64,14 @@ func (t *troop) turn(id int) {
 		}
 
 		worry = worry % divisors
-		var target *monkey
+		var targetIndex int
 		if worry%current.testDivisor == 0 {
-			target = t.monkeys[current.trueMonkey]
+			targetIndex = current.trueMonkey
 		} else {
-			target = t.monkeys[current.falseMonkey]
+			targetIndex = current.falseMonkey
 		}
 
+		target := t.monkeys[targetIndex]
 		target.items = append(target.items, worry)
 	}
 }
