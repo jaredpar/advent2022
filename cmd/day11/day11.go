@@ -37,6 +37,11 @@ func newTroop(monkeys []*monkey, worried bool) *troop {
 }
 
 func (t *troop) turn(id int) {
+	divisors := 1
+	for _, d := range t.monkeys {
+		divisors = divisors * d.testDivisor
+	}
+
 	current := t.monkeys[id]
 	items := current.items
 	current.items = make([]int, 0)
@@ -50,6 +55,7 @@ func (t *troop) turn(id int) {
 			worry = worry / 3
 		}
 
+		worry = worry % divisors
 		var target *monkey
 		if worry%current.testDivisor == 0 {
 			target = t.monkeys[current.trueMonkey]
@@ -235,7 +241,7 @@ func main() {
 	if *p1 {
 		count = part1("input.txt")
 	} else {
-		count = part2("example.txt")
+		count = part2("input.txt")
 	}
 
 	fmt.Println(count)
