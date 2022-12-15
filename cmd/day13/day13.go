@@ -1,6 +1,12 @@
 package main
 
-import "github.com/jaredpar/advent2022/util"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/jaredpar/advent2022/util"
+)
 
 type packet struct {
 	value any
@@ -12,6 +18,16 @@ func newPacketSingle(s int) packet {
 
 func newPacketList(values []packet) packet {
 	return packet{value: values}
+}
+
+func (p packet) isList() bool {
+	_, ok := p.value.([]packet)
+	return ok
+}
+
+func (p packet) isSingle() bool {
+	_, ok := p.value.(int)
+	return ok
 }
 
 func compareSlice(left, right []packet) int {
@@ -57,4 +73,93 @@ func (p packet) compare(other packet) int {
 		}
 	}
 	panic("bad types")
+}
+
+func stringCore(sb *strings.Builder, p packet) {
+	switch l := p.value.(type) {
+	case int:
+		fmt.Fprintf(sb, "%d", l)
+	case []packet:
+		sb.WriteRune('[')
+		first := true
+		for _, c := range l {
+			if !first {
+				sb.WriteString(", ")
+			}
+
+			stringCore(sb, c)
+			first = false
+		}
+		sb.WriteRune(']')
+	}
+}
+
+func (p packet) String() string {
+	var sb strings.Builder
+	stringCore(&sb, p)
+	return sb.String()
+}
+
+func parsePacket(line string) packet {
+	parseOne := func(runes []rune) (packet, []rune) {
+		end := 1
+		for end < len(runes) {
+			if runes[end] == ',' || runes[end] == ']' {
+				break
+			}
+
+			if end+1 == len(runes) {
+				break
+			}
+
+			end++
+		}
+
+		var d int
+		var e error
+		if end == 1 {
+			d, e = util.RuneToInt(runes[0])
+		} else {
+			str := string(runes[0:end])
+			d, e = strconv.Atoi(str)
+		}
+
+		if e != nil {
+			panic("bad rune")
+		}
+		return newPacketSingle(d), runes[end:]
+	}
+
+	var parseList func([]rune) (packet, []rune)
+	parseList = func(runes []rune) (packet, []rune) {
+		runes = runes[1:]
+		packets := make([]packet, 0)
+
+		for len(runes) > 0 {
+			switch runes[0] {
+			case '[':
+				p, rest := parseList(runes)
+				runes = rest
+				packets = append(packets, p)
+			case ']':
+				runes = runes[1:]
+				break
+			case ',':
+				runes = runes[2:]
+			default:
+				p, rest := parseOne(runes)
+				runes = rest
+				packets = append(packets, p)
+			}
+		}
+
+		return newPacketList(packets), runes
+	}
+
+	p, rest := parseList([]rune(line))
+	if len(rest) != 0 {
+		panic("extra items")
+	}
+
+	return p
 }

@@ -29,3 +29,18 @@ func TestCompareList(t *testing.T) {
 	assert.True(oneList.compare(one) == 0)
 	assert.True(oneList.compare(three) < 0)
 }
+
+func TestRoundTrip(t *testing.T) {
+	assert := testUtil.NewAssert(t)
+
+	core := func(line string) {
+		p := parsePacket(line)
+		assert.EqualString(line, p.String())
+	}
+
+	core("[]")
+	core("[1]")
+	core("[1, 2]")
+	core("[1, [2]]")
+	core("[1, [2, 3]]")
+}
