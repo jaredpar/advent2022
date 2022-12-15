@@ -87,24 +87,24 @@ func (g *Grid[T]) Resize(row, column int) {
 //
 // 0123
 // 4567
-func ParseGridFromLines(lines []string) (*Grid[int], error) {
+func ParseGridFromLines[T any](lines []string, parseRune func(int, int, rune) (T, error)) (*Grid[T], error) {
 	if len(lines) == 0 {
 		return nil, errors.New("need at least one line")
 	}
 
-	grid := NewGrid[int](len(lines), len(lines[0]))
+	grid := NewGrid[T](len(lines), len(lines[0]))
 	for row, line := range lines {
-		if len(line) != grid.Rows() {
+		if len(line) != grid.Columns() {
 			return nil, fmt.Errorf("line has wrong length: %s", line)
 		}
 
 		for col, r := range line {
-			digit, err := RuneToInt(r)
+			element, err := parseRune(row, col, r)
 			if err != nil {
 				return nil, err
 			}
 
-			grid.SetValue(row, col, digit)
+			grid.SetValue(row, col, element)
 		}
 	}
 
