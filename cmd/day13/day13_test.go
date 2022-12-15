@@ -40,7 +40,15 @@ func TestRoundTrip(t *testing.T) {
 
 	core("[]")
 	core("[1]")
-	core("[1, 2]")
-	core("[1, [2]]")
-	core("[1, [2, 3]]")
+	core("[1,2]")
+	core("[1,[2]]")
+	core("[1,[2,3]]")
+	core("[[1],[2,3,4]]")
+}
+
+func TestCompareFun(t *testing.T) {
+	assert := testUtil.NewAssert(t)
+	p1 := parsePacket("[[1],[2,3,4]]")
+	p2 := parsePacket("[[1],4]")
+	assert.True(p1.compare(p2) < 0)
 }

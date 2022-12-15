@@ -1,12 +1,16 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/jaredpar/advent2022/util"
 )
+
+//go:embed *.txt
+var f embed.FS
 
 type packet struct {
 	value any
@@ -84,7 +88,7 @@ func stringCore(sb *strings.Builder, p packet) {
 		first := true
 		for _, c := range l {
 			if !first {
-				sb.WriteString(", ")
+				sb.WriteString(",")
 			}
 
 			stringCore(sb, c)
@@ -143,9 +147,9 @@ func parsePacket(line string) packet {
 				packets = append(packets, p)
 			case ']':
 				runes = runes[1:]
-				break
+				return newPacketList(packets), runes
 			case ',':
-				runes = runes[2:]
+				runes = runes[1:]
 			default:
 				p, rest := parseOne(runes)
 				runes = rest
@@ -162,4 +166,45 @@ func parsePacket(line string) packet {
 	}
 
 	return p
+}
+
+func parsePackets(name string) []packet {
+	lines, err := util.ReadLines(f, name)
+	if err != nil {
+		panic(err)
+	}
+
+	packets := make([]packet, 0, (len(lines)+1)/3)
+	for _, line := range lines {
+		if util.IsWhitespace(line) {
+			continue
+		}
+
+		packets = append(packets, parsePacket(line))
+	}
+
+	return packets
+}
+
+func part1(name string) int {
+	sum := 0
+	packets := parsePackets(name)
+	i := 0
+	index := 1
+
+	for i < len(packets) {
+		if packets[i].compare(packets[i+1]) <= 0 {
+			sum += index
+		}
+
+		i += 2
+		index++
+	}
+
+	return sum
+}
+
+func main() {
+	sum := part1("input.txt")
+	fmt.Println(sum)
 }
