@@ -113,7 +113,10 @@ func part1Core(name string) (int, error) {
 		return -1, err
 	}
 
-	g, err := util.ParseGridFromLines(lines)
+	g, err := util.ParseGridFromLines(lines, func(_, _ int, r rune) (int, error) {
+		return util.RuneToInt(r)
+	})
+
 	if err != nil {
 		return -1, err
 	}
@@ -137,7 +140,9 @@ func part2Core(name string) (int, error) {
 		return -1, err
 	}
 
-	g, err := util.ParseGridFromLines(lines)
+	g, err := util.ParseGridFromLines(lines, func(_, _ int, r rune) (int, error) {
+		return util.RuneToInt(r)
+	})
 	if err != nil {
 		return -1, err
 	}
