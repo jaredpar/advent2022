@@ -2,7 +2,9 @@ package main
 
 import (
 	"embed"
+	"flag"
 	"fmt"
+	"math"
 
 	"github.com/jaredpar/advent2022/util"
 )
@@ -56,8 +58,7 @@ func newVisitInfo(distance int) *visitInfo {
 	return &visitInfo{visited: false, distance: distance}
 }
 
-func part1(name string) int {
-	grid, start, end := parseInput(name)
+func getSteps(grid *util.Grid[int], start, end point) (int, bool) {
 	visitMap := make(map[point]*visitInfo)
 	visitMap[start] = newVisitInfo(0)
 
@@ -128,13 +129,45 @@ func part1(name string) int {
 
 	endDist, ok := visitMap[end]
 	if !ok {
-		panic("never reached end")
+		return 0, false
 	}
 
-	return endDist.distance
+	return endDist.distance, true
+}
+
+func part1(name string) int {
+	grid, start, end := parseInput(name)
+	steps, ok := getSteps(grid, start, end)
+	if !ok {
+		panic("didn't reach end")
+	}
+	return steps
+}
+
+func part2(name string) int {
+	grid, _, end := parseInput(name)
+	minSteps := math.MaxInt
+	for r := 0; r < grid.Rows(); r++ {
+		for c := 0; c < grid.Columns(); c++ {
+			if grid.Value(r, c) == 0 {
+				steps, ok := getSteps(grid, newPoint(r, c), end)
+				if ok && steps < minSteps {
+					minSteps = steps
+				}
+			}
+		}
+	}
+
+	return minSteps
 }
 
 func main() {
-	steps := part1("input.txt")
-	fmt.Println(steps)
+	p1 := flag.Bool("part1", false, "run part 1")
+	if *p1 {
+		steps := part1("input.txt")
+		fmt.Println(steps)
+	} else {
+		steps := part2("input.txt")
+		fmt.Println(steps)
+	}
 }
