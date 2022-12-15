@@ -2,7 +2,9 @@ package main
 
 import (
 	"embed"
+	"flag"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -204,7 +206,32 @@ func part1(name string) int {
 	return sum
 }
 
+func part2(name string) int {
+	packets := parsePackets(name)
+	packets = append(packets, parsePacket("[[2]]"))
+	packets = append(packets, parsePacket("[[6]]"))
+	sort.Slice(packets, func(i, j int) bool {
+		return packets[i].compare(packets[j]) < 0
+	})
+
+	value := 1
+	for i := 0; i < len(packets); i++ {
+		str := packets[i].String()
+		if str == "[[2]]" || str == "[[6]]" {
+			value *= (i + 1)
+		}
+	}
+
+	return value
+}
+
 func main() {
-	sum := part1("input.txt")
-	fmt.Println(sum)
+	p1 := flag.Bool("part1", false, "part 1")
+	if *p1 {
+		sum := part1("input.txt")
+		fmt.Println(sum)
+	} else {
+		value := part2("input.txt")
+		fmt.Println(value)
+	}
 }
