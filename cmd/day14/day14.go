@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"flag"
 	"fmt"
 	"strings"
 
@@ -58,7 +59,7 @@ func parsePaths(name string) []path {
 }
 
 func part1(name string) int {
-	cave := parseCave(name)
+	cave := parseCave(name, false, 0)
 	i := 1
 	for {
 		if cave.dropSand() {
@@ -69,7 +70,28 @@ func part1(name string) int {
 	}
 }
 
+func part2(name string) int {
+	cave := parseCave(name, true, 200)
+	i := 1
+	for {
+		_ = cave.dropSand()
+		if cave.grid.Value(0, cave.startColumn) == 'o' {
+			return i
+		}
+
+		i++
+	}
+}
+
 func main() {
-	count := part1("input.txt")
-	fmt.Println(count)
+	p1 := flag.Bool("part1", false, "run part 1")
+	flag.Parse()
+	if *p1 {
+		count := part1("input.txt")
+		fmt.Println(count)
+	} else {
+		count := part2("input.txt")
+		fmt.Println(count)
+	}
+
 }

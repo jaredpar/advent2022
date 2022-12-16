@@ -17,6 +17,9 @@ func rowColumn(index, columnLength int) (row, column int) {
 }
 
 func index(row, column, columnLength int) int {
+	if row < 0 || column < 0 || column >= columnLength {
+		panic("bad index")
+	}
 	return (row * columnLength) + column
 }
 

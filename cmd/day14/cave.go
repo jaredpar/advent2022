@@ -9,6 +9,7 @@ import (
 type cave struct {
 	grid        *util.Grid[rune]
 	startColumn int
+	hasFloor    bool
 }
 
 func (c *cave) String() string {
@@ -41,6 +42,9 @@ func (c *cave) dropSand() bool {
 		if c.isEmpty(row+1, col) {
 			row++
 		} else if col == 0 || col+1 == grid.Columns() {
+			if c.hasFloor {
+				panic("hit the wall")
+			}
 			return true
 		} else if c.isEmpty(row+1, col-1) {
 			row++
@@ -57,7 +61,7 @@ func (c *cave) dropSand() bool {
 	return false
 }
 
-func parseCave(name string) *cave {
+func parseCave(name string, hasFloor bool, columnAdjust int) *cave {
 	paths := parsePaths(name)
 	min := 500
 	max := 500
@@ -69,6 +73,13 @@ func parseCave(name string) *cave {
 			max = util.Max(max, point.column)
 		}
 	}
+
+	if hasFloor {
+		height += 2
+	}
+
+	min -= columnAdjust
+	max += columnAdjust
 
 	rows := height
 	columns := max - min
@@ -107,5 +118,12 @@ func parseCave(name string) *cave {
 		}
 	}
 
-	return &cave{grid: grid, startColumn: startColumn}
+	if hasFloor {
+		floor := height
+		for c := 0; c < grid.Columns(); c++ {
+			grid.SetValue(floor, c, '#')
+		}
+	}
+
+	return &cave{grid: grid, startColumn: startColumn, hasFloor: hasFloor}
 }
