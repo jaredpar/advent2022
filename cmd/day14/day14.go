@@ -57,73 +57,19 @@ func parsePaths(name string) []path {
 	return paths
 }
 
-func parseCave(name string) (grid *util.Grid[rune], start int) {
-	paths := parsePaths(name)
-	min := 500
-	max := 500
-	height := 0
-	for _, path := range paths {
-		height = util.Max(height, path.height())
-		for _, point := range path.points {
-			min = util.Min(min, point.column)
-			max = util.Max(max, point.column)
-		}
-	}
-
-	rows := height
-	columns := max - min
-	grid = util.NewGrid[rune](rows+1, columns+1)
-	grid.SetAll('.')
-	start = 500 - min
-	adjust := func(p point) point {
-		p.column -= min
-		return p
-	}
-
-	// Draw out the cave
-	for _, path := range paths {
-		if len(path.points) == 0 {
-			continue
+func part1(name string) int {
+	cave := parseCave(name)
+	i := 1
+	for {
+		if cave.dropSand() {
+			return i - 1
 		}
 
-		current := adjust(path.points[0])
-		for _, p := range path.points[1:] {
-			p = adjust(p)
-			if current.column == p.column {
-				start := util.Min(current.row, p.row)
-				max := util.Max(current.row, p.row)
-				for r := start; r <= max; r++ {
-					grid.SetValue(r, current.column, '#')
-				}
-			} else {
-				start := util.Min(current.column, p.column)
-				max := util.Max(current.column, p.column)
-				for c := start; c <= max; c++ {
-					grid.SetValue(current.row, c, '#')
-				}
-			}
-
-			current = p
-		}
+		i++
 	}
-
-	return
-}
-
-func stringCave(cave *util.Grid[rune]) string {
-	var sb strings.Builder
-	for r := 0; r < cave.Rows(); r++ {
-		for c := 0; c < cave.Columns(); c++ {
-			sb.WriteRune(cave.Value(r, c))
-		}
-		sb.WriteRune('\n')
-	}
-
-	return sb.String()
 }
 
 func main() {
-	cave, _ := parseCave("example.txt")
-	fmt.Println(stringCave(cave))
-
+	count := part1("input.txt")
+	fmt.Println(count)
 }
