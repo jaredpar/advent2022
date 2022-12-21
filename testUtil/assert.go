@@ -24,6 +24,10 @@ func (a Assert) EqualString(expected, actual string) {
 	AssertEqual(a.t, expected, actual)
 }
 
+func (a Assert) EqualRune(expected, actual rune) {
+	AssertEqual(a.t, expected, actual)
+}
+
 func (a Assert) True(cond bool) {
 	if !cond {
 		a.t.Error("expected true")
